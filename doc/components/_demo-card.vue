@@ -12,7 +12,8 @@
 <script setup lang="ts"></script>
 
 <style lang="less">
-@import './_demo-theme.less';
+@demo-border: #ebeef5;
+@demo-text: #606266;
 
 .demo-card {
   padding: 16px;

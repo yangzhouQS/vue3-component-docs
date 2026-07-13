@@ -45,8 +45,18 @@ export default defineConfig({
       defaultPreviewMode: 'iframe-follow',
       previewLanguages: ['vue', 'tsx', 'jsx'],
       iframeOptions: {
+        devPort: 7900,
         customEntry: mountVueDemo,
         builderConfig: {
+          tools: {
+            rspack: {
+              resolve: {
+                alias: {
+                  '@': path.join(import.meta.dirname, 'doc'),
+                },
+              },
+            },
+          },
           plugins: [
             pluginVue(),
             pluginBabel({ include: /\.(?:jsx|tsx)$/ }),

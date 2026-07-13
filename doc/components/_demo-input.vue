@@ -12,7 +12,7 @@ const value = ref('');
 </script>
 
 <style lang="less">
-@import './_demo-theme.less';
+@demo-text: #606266;
 
 .demo-input {
   padding: 16px;

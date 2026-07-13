@@ -1,6 +1,6 @@
 import { defineComponent, ref } from 'vue';
 import { ElButton } from 'element-plus';
-import './_demo-button-tsx.less';
+import '@/components/_demo-button-tsx.less';
 
 export default defineComponent({
   name: 'DemoButtonTsx',

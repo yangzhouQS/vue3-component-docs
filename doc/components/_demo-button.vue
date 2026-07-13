@@ -19,7 +19,7 @@ const handleClick = () => {
 </script>
 
 <style lang="less">
-@import './_demo-theme.less';
+@demo-primary: #409eff;
 
 .demo-button {
   display: flex;
