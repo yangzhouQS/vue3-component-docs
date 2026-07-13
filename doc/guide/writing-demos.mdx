@@ -1,0 +1,55 @@
+---
+title: 编写组件示例
+description: 如何编写与预览 Vue3 组件示例，支持 .vue 与 .tsx。
+---
+
+# 编写组件示例
+
+本项目通过 `@rspress/plugin-preview` 在 iframe 沙箱中渲染组件，支持以下文件作为示例：
+
+- `.vue` 单文件组件
+- `.tsx` / `.jsx`（Vue JSX）
+
+## 预览模式
+
+所有示例使用 `preview="iframe-follow"` 模式：组件渲染在跟随代码块的 iframe 中，与文档站点样式完全隔离。该模式支持自定义入口（`customEntry`），是 Vue3 组件预览的推荐模式。
+
+## 内联示例
+
+直接在代码块中编写组件代码，默认导出组件即可：
+
+```tsx preview="iframe-follow"
+import { defineComponent } from 'vue';
+import { ElTag } from 'element-plus';
+
+export default defineComponent({
+  setup() {
+    return () => (
+      <div style={{ padding: '16px' }}>
+        <ElTag type="success">内联 TSX 示例</ElTag>
+      </div>
+    );
+  },
+});
+```
+
+## 外部文件示例
+
+将组件代码放在单独文件中，通过 `file` 属性引用（示例代码以 `_` 开头会被排除出路由）：
+
+````mdx
+```vue file="./_demo-button.vue" preview="iframe-follow"
+
+```
+````
+
+## .vue 与 .tsx 的差异
+
+| 写法 | 组件引用 | 说明 |
+| --- | --- | --- |
+| `.vue` | 模板中使用 `<el-button>`（kebab-case） | 依赖全局注册的 Element Plus |
+| `.tsx` | JSX 中使用 `<ElButton>`（PascalCase）并显式 import | JSX 中仅 PascalCase 会解析为组件 |
+
+:::warning
+在 TSX 中，`<el-button>` 会被当作原生 HTML 元素，不会解析为组件。请使用 `<ElButton>` 并显式导入。
+:::

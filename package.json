@@ -1,0 +1,29 @@
+{
+  "name": "vue3-component-docs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "基于 Rspress 的 Vue3 + TSX + Less + Element Plus 组件库文档",
+  "scripts": {
+    "dev": "rspress dev",
+    "build": "rspress build",
+    "preview": "rspress preview"
+  },
+  "dependencies": {
+    "element-plus": "^2.8.8",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "~2.1.5",
+    "@rsbuild/plugin-babel": "~2.0.1",
+    "@rsbuild/plugin-less": "2.0.1",
+    "@rsbuild/plugin-react": "2.1.0",
+    "@rsbuild/plugin-vue": "2.0.1",
+    "@rsbuild/plugin-vue-jsx": "2.0.1",
+    "@rspress/core": "^2.0.17",
+    "@rspress/plugin-playground": "2.0.17",
+    "@rspress/plugin-preview": "2.0.17",
+    "@types/node": "^22.8.1",
+    "@vue/babel-plugin-jsx": "^2.0.1"
+  }
+}

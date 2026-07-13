@@ -1,0 +1,6 @@
+[
+  { "type": "file", "name": "index", "label": "介绍" },
+  { "type": "file", "name": "installation", "label": "安装" },
+  { "type": "file", "name": "quickstart", "label": "快速开始" },
+  { "type": "file", "name": "writing-demos", "label": "编写组件示例" }
+]

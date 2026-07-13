@@ -1,0 +1,32 @@
+---
+title: Button 按钮
+description: 常用的操作按钮，支持多种类型与状态。
+---
+
+# Button 按钮
+
+常用的操作按钮，用于触发即时操作。
+
+## 基础用法
+
+使用 `.vue` 单文件组件 + Less 编写，模板中通过 `<el-button>` 使用 Element Plus。
+
+```vue file="./_demo-button.vue" preview="iframe-follow"
+
+```
+
+## TSX 用法
+
+使用 `.tsx` + Element Plus 编写，JSX 中需使用 `<ElButton>`（PascalCase）并显式导入。
+
+```tsx file="./_demo-button-tsx.tsx" preview="iframe-follow"
+
+```
+
+## 属性
+
+| 参数 | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- |
+| type | 按钮类型 | `'primary' \| 'success' \| 'warning' \| 'danger' \| 'default'` | `'default'` |
+| disabled | 是否禁用 | `boolean` | `false` |
+| loading | 是否加载中 | `boolean` | `false` |

@@ -1,0 +1,7 @@
+[
+  { "type": "file", "name": "index", "label": "总览" },
+  { "type": "file", "name": "button", "label": "Button 按钮" },
+  { "type": "file", "name": "input", "label": "Input 输入框" },
+  { "type": "file", "name": "alert", "label": "Alert 提示" },
+  { "type": "file", "name": "card", "label": "Card 卡片" }
+]

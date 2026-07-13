@@ -1,0 +1,41 @@
+---
+title: 快速开始
+description: 快速启动文档站点并编写第一个组件示例。
+---
+
+# 快速开始
+
+## 启动开发服务器
+
+```bash
+pnpm dev
+```
+
+启动后访问终端输出的本地地址即可查看文档站点。
+
+## 第一个组件示例
+
+在 `.mdx` 文件中，为代码块声明 `preview="iframe-follow"` 即可在 iframe 沙箱中预览组件，默认导出组件即可被渲染：
+
+```tsx preview="iframe-follow"
+import { defineComponent, ref } from 'vue';
+import { ElButton } from 'element-plus';
+
+export default defineComponent({
+  setup() {
+    const count = ref(0);
+    return () => (
+      <div style={{ padding: '16px' }}>
+        <p>当前计数：{count.value}</p>
+        <ElButton type="primary" onClick={() => count.value++}>
+          点击 +1
+        </ElButton>
+      </div>
+    );
+  },
+});
+```
+
+:::tip
+组件预览基于 iframe 沙箱，Element Plus 已在预览环境全局注册，无需手动引入样式。
+:::

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "ESNext"],
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "strict": true,
+    "isolatedModules": true
+  },
+  "include": ["rspress.config.ts", "doc"],
+  "exclude": [
+    "node_modules",
+    "doc_build",
+    "e2e",
+    "doc/**/_*.tsx",
+    "doc/**/_*.vue",
+    "doc/**/_*.less"
+  ]
+}
