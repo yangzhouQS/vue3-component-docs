@@ -1,0 +1,26 @@
+/*
+ * 组件代码区与预览区布局覆盖
+ * --------------------------------------------------
+ * @rspress/plugin-preview 的 iframe-follow 模式：
+ *   - 默认（< 960px）：上下排列（flex-direction: column）
+ *   - >= 960px：左右排列（flex-direction: row）
+ *
+ * 下面通过更高优先级的选择器（.rspress-doc 前缀），
+ * 让「代码区」与「预览区」在所有屏幕宽度下都保持「上下布局」。
+ */
+
+.rspress-doc .rp-preview--iframe-follow {
+  flex-direction: column;
+}
+
+.rspress-doc .rp-preview--iframe-follow__device {
+  /* 上下布局时，分隔线在顶部 */
+  border-top: 1px solid var(--rp-container-details-border);
+  border-left: none;
+  /* 预览区最小高度，避免 iframe 在垂直布局下塌缩 */
+  min-height: 320px;
+}
+
+.rspress-doc .rp-preview--iframe-follow__device iframe {
+  min-height: 320px;
+}
