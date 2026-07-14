@@ -1,25 +1,27 @@
 /**
- * 自定义 Playground 渲染组件（Vue3 版）
+ * 自定义 Playground 渲染组件（Vue3 版，支持原始 SFC 在线编译运行）
  * --------------------------------------------------
- * 官方默认的 plugin-playground Runner 在浏览器中用 @babel/standalone 编译，
- * 并以 React.createElement 渲染默认导出 —— 因此默认只支持 React。
+ * 支持两种写法：
+ *  1. 原始 SFC：`<template>` + `<script setup>` + `<style scoped>`（含 Element Plus、图标）
+ *  2. 普通组件：`export default defineComponent({ setup() { return () => h(...) } })`（h 渲染函数）
  *
- * 本文件替换默认渲染逻辑：
- *  1. 用 @babel/standalone 编译用户代码（typescript + env，不使用 react 预设）；
- *  2. 将 ESM import 重写为 __get_import，从而解析 include 中预打包的依赖（如 vue）；
- *  3. 取默认导出的 Vue 组件，用 createApp 挂载到预览容器。
+ * 实现：
+ *  - SFC 用 `vue/compiler-sfc`（本地打包，动态导入）在浏览器端编译：compileScript(inlineTemplate)
+ *    把 <template> 编译为 render 并内联；<style> 用 compileStyleAsync 处理（含 scoped）。
+ *  - 编译产物经 @babel/standalone（自托管）转 commonjs，并将 import 重写为 __get_import，
+ *    从而解析 include 中预打包的依赖（vue / element-plus / @element-plus/icons-vue）。
+ *  - 取默认导出组件，用 createApp 挂载，并全局注册 Element Plus。
  *
- * 说明：
- *  - 由于浏览器端 @babel/standalone 不含 @vue/babel-plugin-jsx，playground 中的 Vue 组件
- *    需使用 h() 渲染函数或 template 字符串，不能使用 JSX/TSX 语法。
- *  - createApp 取自 include 中预打包的「带编译器」版本（vue.esm-browser），因此 template 可在线编译。
+ * 说明：浏览器端 babel 不含 @vue/babel-plugin-jsx，因此 SFC 内请使用 <template>（非 JSX）。
  */
 import { Editor } from '@rspress/plugin-playground/web';
 // @ts-expect-error 由 plugin-playground 注入的虚拟模块
 import getImport from '_rspress_playground_imports';
 import { useCallback, useEffect, useRef, useState } from 'react';
+// Element Plus 组件样式（playground 预览需要）
+import 'element-plus/dist/index.css';
 
-/* ----------------------------- 加载 @babel/standalone（自托管，动态导入懒加载，无需 CDN）----------------------------- */
+/* ----------------------------- 加载 @babel/standalone（自托管，动态导入懒加载）----------------------------- */
 let babelPromise: Promise<any> | null = null;
 function getBabel(): Promise<any> {
   const w = window as any;
@@ -63,8 +65,6 @@ const objectPattern = (names: any[]) => ({
   }),
 });
 
-// 该插件在 env 预设的 commonjs 转换之前运行（plugin 先于 preset），
-// 因此 import 会被替换为变量声明，不会生成 require()。
 const importRewritePlugin = {
   visitor: {
     ImportDeclaration(path: any) {
@@ -88,7 +88,7 @@ const importRewritePlugin = {
   },
 };
 
-function compile(babel: any, code: string, language: string): string {
+function babelTransform(babel: any, code: string, language: string): string {
   const presets: any[] = [[babel.availablePresets.env, { modules: 'commonjs' }]];
   if (language === 'tsx' || language === 'ts') {
     presets.unshift([
@@ -104,9 +104,55 @@ function compile(babel: any, code: string, language: string): string {
   return result.code;
 }
 
+/* ----------------------------- SFC 检测与编译 ----------------------------- */
+function isSFC(code: string): boolean {
+  return /<template[\s>]/.test(code) || /<script[\s>]/.test(code);
+}
+
+async function compileSFC(code: string): Promise<{ js: string; css: string }> {
+  const sfc: any = await import('vue/compiler-sfc');
+  const { descriptor, errors } = sfc.parse(code, { filename: 'App.vue' });
+  if (errors && errors.length) throw errors[0];
+  // scope id：compileScript 与 compileStyle 均会自动剥离 data-v- 前缀，保持一致即可匹配
+  const scopeId = 'data-v-' + Math.random().toString(36).slice(2, 10);
+
+  let js: string;
+  if (descriptor.script || descriptor.scriptSetup) {
+    // inlineTemplate：把 <template> 编译为 render 并内联进 <script setup> 产物，得到自完整组件
+    const script = sfc.compileScript(descriptor, {
+      id: scopeId,
+      inlineTemplate: true,
+      sourceMap: false,
+    });
+    js = script.content;
+  } else {
+    // 仅有 <template> 的 SFC：单独编译模板，组装为 { render } 组件
+    if (!descriptor.template) throw new Error('SFC 必须包含 <template> 或 <script>');
+    const tpl = sfc.compileTemplate({
+      source: descriptor.template.content,
+      filename: 'App.vue',
+      id: scopeId,
+    });
+    js = `${tpl.code}\nexport default { render };`;
+  }
+
+  let css = '';
+  for (const s of descriptor.styles || []) {
+    const res = await sfc.compileStyleAsync({
+      source: s.content,
+      filename: 'App.vue',
+      id: scopeId,
+      scoped: !!s.scoped,
+    });
+    css += res.code + '\n';
+  }
+  return { js, css };
+}
+
 /* ----------------------------- Vue 运行器：编译并挂载默认导出 ----------------------------- */
-function VueRunner({ code, language }: { code: string; language: string }) {
+function VueRunner({ code }: { code: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const styleRef = useRef<HTMLStyleElement>(null);
   const appRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,50 +160,68 @@ function VueRunner({ code, language }: { code: string; language: string }) {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       try {
+        let jsCode = code;
+        let css = '';
+        const sfcMode = isSFC(code);
+        if (sfcMode) {
+          const r = await compileSFC(code);
+          jsCode = r.js;
+          css = r.css;
+        }
         const babel = await getBabel();
-        const compiled = compile(babel, code, language);
+        // SFC 产物为编译后 JS（用 ts 预设兜底剥离类型）；普通代码按 tsx 处理
+        const compiled = babelTransform(babel, jsCode, sfcMode ? 'ts' : 'tsx');
         if (cancelled) return;
+        if (styleRef.current) styleRef.current.textContent = css;
+
         const runExports: any = {};
         // eslint-disable-next-line no-new-func
         const fn = new Function('__get_import', 'exports', compiled);
         fn(getImport, runExports);
         const comp = runExports.default;
-        if (!comp) throw new Error('请默认导出一个 Vue 组件（export default ...）');
+        if (!comp)
+          throw new Error('请提供一个 Vue 组件（SFC 默认导出，或 export default defineComponent(...)）');
+
         if (appRef.current) {
           appRef.current.unmount();
           appRef.current = null;
         }
         if (hostRef.current) {
           hostRef.current.innerHTML = '';
-          // createApp 取自 include 预打包的「带编译器」Vue，使 template 可在线编译
           const vueNS: any = getImport('vue');
           const createApp = vueNS?.createApp ?? vueNS?.default?.createApp;
-          if (!createApp) throw new Error('无法加载 Vue（含模板编译器），请检查 pluginPlayground 的 include 配置');
-          appRef.current = createApp(comp);
-          appRef.current.mount(hostRef.current);
+          if (!createApp) throw new Error('无法加载 Vue，请检查 include 配置');
+          const app = createApp(comp);
+          // 全局注册 Element Plus（使 <el-button> 等可用）
+          const EP: any =
+            getImport('element-plus', true) ?? (getImport('element-plus') as any)?.default;
+          if (EP) app.use(EP);
+          appRef.current = app;
+          app.mount(hostRef.current);
         }
         setError(null);
       } catch (e: any) {
         if (!cancelled) setError(e?.message || String(e));
       }
-    }, 800);
+    }, 600);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [code, language]);
+  }, [code]);
 
   useEffect(() => () => appRef.current?.unmount(), []);
 
   return (
     <div className="rp-playground-runner">
+      <style ref={styleRef} />
       <div ref={hostRef} />
       {error && <pre className="rp-playground-error">{error}</pre>}
     </div>
   );
 }
 
-/* ----------------------------- Playground 外壳（React） ----------------------------- */
+/* ----------------------------- Playground 外壳（React）----------------------------- */
 export default function Playground(props: any) {
   const { code: codeProp, language } = props;
   const [code, setCode] = useState<string>(codeProp);
@@ -167,7 +231,7 @@ export default function Playground(props: any) {
 
   return (
     <div className="rp-playground rp-playground-horizontal rp-not-doc">
-      <VueRunner code={code} language={language} />
+      <VueRunner code={code} />
       <Editor
         value={code}
         onChange={onChange}

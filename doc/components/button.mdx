@@ -52,37 +52,59 @@ export default defineComponent({
 
 :::tip preview 与 playground 的区别
 - `preview="iframe-follow"`：完整渲染（支持 TSX/JSX、Less、Element Plus），代码为**只读展示**。
-- `playground`：代码**可在线编辑**实时预览；受浏览器端 `@babel/standalone` 限制，需用 `h()` 或 `template`，不支持 JSX。
+- `playground`：代码**可在线编辑**实时预览；支持原始 SFC（`<template>` + `<script setup>` + `<style>`）写法。
 :::
 
-## 在线编辑 - template 写法
+## 在线编辑 - 原始 SFC 写法
 
-使用 `template` 字符串写法，语法与 `.vue` 模板一致（`{{ }}`、`@click`），可直接在右侧编辑器修改：
+支持完整 Vue 单文件组件语法（`<template>` + `<script setup lang="ts">` + `<style scoped>`），可直接使用 Element Plus 组件与图标，右侧编辑器修改后实时预览：
 
 ```tsx playground
-import { defineComponent, ref } from 'vue';
-
-export default defineComponent({
-  setup() {
-    const count = ref(0);
-    return { count };
-  },
-  template: `
-    <div style="padding: 16px">
-      <p style="margin: 0 0 12px; color: #303133">当前计数：{{ count }}</p>
-      <button
-        style="padding: 6px 16px; background: #409eff; color: #fff; border: none; border-radius: 4px; cursor: pointer"
-        @click="count++"
-      >
-        点击 +1
-      </button>
+<template>
+  <div class="button-example">
+    <div class="button-row">
+      <el-button>Default</el-button>
+      <el-button type="primary">Primary</el-button>
+      <el-button type="success">Success</el-button>
+      <el-button type="info">Info</el-button>
+      <el-button type="warning">Warning</el-button>
+      <el-button type="danger">Danger</el-button>
     </div>
-  `,
-});
+
+    <div class="button-row">
+      <el-button :icon="Search" circle />
+      <el-button type="primary" :icon="Edit" circle />
+      <el-button type="success" :icon="Check" circle />
+      <el-button type="warning" :icon="Star" circle />
+      <el-button type="danger" :icon="Delete" circle />
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { Check, Delete, Edit, Search, Star } from '@element-plus/icons-vue'
+</script>
+
+<style scoped>
+.button-example {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 16px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+</style>
+
 ```
 
-:::info template 在线编译
-playground 通过 `include` 引入了「带编译器」的 Vue 全量构建（`vue.esm-browser`），因此 `template` 字符串会在浏览器端**实时编译**。修改上面代码中的模板（例如把 `@click="count++"` 改成 `@click="count += 10"`）即可立即看到效果。
+:::info SFC 在线编译
+playground 在浏览器端用 `vue/compiler-sfc` 实时编译 SFC（`<template>` 编译为 render、`<style scoped>` 处理作用域），Element Plus 与 `@element-plus/icons-vue` 已在本地预打包并全局注册。修改上方代码（如增删按钮、改 `type`）即可立即看到效果。
 :::
 
 ## 属性
