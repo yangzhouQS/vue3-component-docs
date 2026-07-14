@@ -24,6 +24,6 @@
     "@rspress/plugin-playground": "2.0.17",
     "@rspress/plugin-preview": "2.0.17",
     "@types/node": "^22.8.1",
-    "@vue/babel-plugin-jsx": "^2.0.1"
+    "@vue/babel-plugin-jsx": "^3.0.0"
   }
 }
