@@ -9,6 +9,13 @@ import { pluginBabel } from '@rsbuild/plugin-babel';
 import { pluginLess } from '@rsbuild/plugin-less';
 import { cdnStyles, cdnScripts, cdnExternals } from './playground/cdn';
 
+// 站点 base 前缀：rspress 的 base 与「新标签页打开」构造 URL 共用同一个值
+// 优先用环境变量 BASE_PATH，否则用下方默认值（部署到子路径时改这里）
+const SITE_BASE = (() => {
+  const b = process.env.BASE_PATH || '/vue-node-docs/';
+  return b.endsWith('/') ? b : b + '/';
+})();
+
 const mountVueDemo = ({ demoPath }: { demoPath: string }): string =>
   [
     "import { createApp } from 'vue';",
@@ -71,16 +78,12 @@ const pluginSfcBrowser = () => ({
 });
 
 // 全页可编辑 Playground（新标签页打开）：注入站点 base 前缀供 openInNewTab 使用
-const siteBase = (() => {
-  const b = process.env.BASE_PATH || '/';
-  return b.endsWith('/') ? b : b + '/';
-})();
 const pluginPlaygroundFull = () => ({
   name: 'playground-full',
   builderConfig: {
     source: {
       define: {
-        __PG_BASE__: JSON.stringify(siteBase),
+        __PG_BASE__: JSON.stringify(SITE_BASE),
       },
     },
   },
@@ -89,10 +92,9 @@ const pluginPlaygroundFull = () => ({
 export default defineConfig({
   root: path.join(import.meta.dirname, 'doc'),
   title: 'Vue3 组件库文档',
-  // base: "/vue-node-docs/",
+  base: SITE_BASE,
   description: '基于 Rspress 的 Vue3 + TSX + Less + Element Plus 组件库文档',
   // lang: 'zh-CN',
-  base: process.env.BASE_PATH || '/',
   icon: '/logo.svg',
   themeConfig: {
     logo: '/logo.svg',
