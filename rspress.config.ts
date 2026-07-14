@@ -63,6 +63,9 @@ export default defineConfig({
             pluginVueJsx(),
             pluginLess(),
           ],
+          dev:{
+            hmr: false
+          }
         },
       },
     }),
