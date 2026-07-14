@@ -23,7 +23,7 @@ export default defineConfig({
   root: path.join(import.meta.dirname, 'doc'),
   title: 'Vue3 组件库文档',
   description: '基于 Rspress 的 Vue3 + TSX + Less + Element Plus 组件库文档',
-  lang: 'zh-CN',
+  // lang: 'zh-CN',
   base: process.env.BASE_PATH || '/',
   icon: '/logo.svg',
   themeConfig: {
@@ -32,7 +32,7 @@ export default defineConfig({
       {
         icon: 'github',
         mode: 'link',
-        content: 'https://github.com/your-org/vue3-component-docs',
+        content: 'https://github.com/yangzhouQS/vue3-component-docs',
       },
     ],
     footer: {
