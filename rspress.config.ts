@@ -43,6 +43,16 @@ const pluginSfcBrowser = () => ({
         };
         add('vue/compiler-sfc', sfcBrowserBuild);
         add('@vue/compiler-sfc', sfcBrowserBuild);
+        // 屏蔽 @vue/compiler-sfc 浏览器构建中 scss/less/stylus 懒加载 require 产生的
+        // "Critical dependency" 警告（运行时不会触发，仅用普通 CSS）。
+        config.ignoreWarnings = [
+          ...(Array.isArray(config.ignoreWarnings)
+            ? config.ignoreWarnings
+            : config.ignoreWarnings
+              ? [config.ignoreWarnings]
+              : []),
+          { module: /@vue[\\/]compiler-sfc/ },
+        ];
       },
     },
   },
@@ -75,6 +85,7 @@ export default defineConfig({
       previewLanguages: ['vue', 'tsx', 'jsx'],
       iframeOptions: {
         customEntry: mountVueDemo,
+        devPort: 7888,
         builderConfig: {
           tools: {
             rspack: {
