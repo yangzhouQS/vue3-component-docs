@@ -157,12 +157,39 @@ async function compileSFC(code: string): Promise<{ js: string; css: string }> {
   return { js, css };
 }
 
+/* ----------------------------- 操作图标 ----------------------------- */
+const IconRefresh = (
+  <svg width="1em" height="1em" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="4">
+    <path d="M38.837 18C36.4634 12.1363 30.7148 8 24 8C15.1634 8 8 15.1634 8 24C8 32.8366 15.1634 40 24 40C31.4554 40 37.7198 34.9009 39.4959 28M40 8V18H30" />
+  </svg>
+);
+const IconExpand = (
+  <svg width="1em" height="1em" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="4">
+    <path d="M33 6v9h9M15 6v9H6M33 42v-9h9M15 42v-9H6" />
+  </svg>
+);
+const IconClose = (
+  <svg width="1em" height="1em" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="4">
+    <path d="M8 8L40 40M40 8L8 40" />
+  </svg>
+);
+
 /* ----------------------------- Vue 运行器：编译并挂载默认导出 ----------------------------- */
-function VueRunner({ code }: { code: string }) {
+function VueRunner({
+  code,
+  showOps = true,
+  onFullscreen,
+}: {
+  code: string;
+  showOps?: boolean;
+  onFullscreen?: () => void;
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const styleRef = useRef<HTMLStyleElement>(null);
   const appRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
+  // runId：点击「刷新」时自增，强制重新编译并重新挂载（重置响应式状态）
+  const [runId, setRunId] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -216,12 +243,34 @@ function VueRunner({ code }: { code: string }) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [code]);
+  }, [code, runId]);
 
   useEffect(() => () => appRef.current?.unmount(), []);
 
   return (
     <div className="rp-playground-runner">
+      {showOps && (
+        <div className="rp-pg-ops">
+          <button
+            type="button"
+            className="rp-pg-ops__btn"
+            title="重新运行"
+            onClick={() => setRunId((n) => n + 1)}
+          >
+            {IconRefresh}
+          </button>
+          {onFullscreen && (
+            <button
+              type="button"
+              className="rp-pg-ops__btn"
+              title="全屏预览"
+              onClick={onFullscreen}
+            >
+              {IconExpand}
+            </button>
+          )}
+        </div>
+      )}
       <style ref={styleRef} />
       <div ref={hostRef} />
       {error && <pre className="rp-playground-error">{error}</pre>}
@@ -233,9 +282,20 @@ function VueRunner({ code }: { code: string }) {
 export default function Playground(props: any) {
   const { code: codeProp, language } = props;
   const [code, setCode] = useState<string>(codeProp);
+  const [fullscreen, setFullscreen] = useState(false);
   const onChange = useCallback((e?: string) => setCode(e || ''), []);
   const monacoLanguage =
     language === 'tsx' || language === 'ts' ? 'typescript' : 'javascript';
+
+  // Esc 关闭全屏
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFullscreen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fullscreen]);
 
   return (
     <div className="rp-playground rp-playground-vertical rp-not-doc">
@@ -253,7 +313,36 @@ export default function Playground(props: any) {
         }}
       />
       {/* 组件渲染预览在下 */}
-      <VueRunner code={code} />
+      <VueRunner code={code} onFullscreen={() => setFullscreen(true)} />
+
+      {/* 全屏预览浮层：同一 document，复用已加载的 Vue + Element Plus + 样式 */}
+      {fullscreen && (
+        <div
+          className="rp-pg-fullscreen"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFullscreen(false);
+          }}
+        >
+          <div className="rp-pg-fullscreen__inner">
+            <div className="rp-pg-fullscreen__bar">
+              <span>全屏预览（Esc 或点击空白处关闭）</span>
+              <button
+                type="button"
+                className="rp-pg-ops__btn"
+                title="关闭"
+                onClick={() => setFullscreen(false)}
+              >
+                {IconClose}
+              </button>
+            </div>
+            <div className="rp-pg-fullscreen__body">
+              <VueRunner code={code} showOps={false} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
