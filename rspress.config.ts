@@ -45,7 +45,6 @@ export default defineConfig({
       defaultPreviewMode: 'iframe-follow',
       previewLanguages: ['vue', 'tsx', 'jsx'],
       iframeOptions: {
-        devPort: 7900,
         customEntry: mountVueDemo,
         builderConfig: {
           tools: {
@@ -69,6 +68,18 @@ export default defineConfig({
         },
       },
     }),
-    pluginPlayground(),
+    pluginPlayground({
+      render: path.join(import.meta.dirname, 'playground', 'Playground.tsx'),
+      // 使用「带编译器」的 Vue 全量构建，使 playground 中的 template 字符串可在线编译
+      include: [['vue', 'vue/dist/vue.esm-browser.prod.js']],
+      monacoLoader: {
+        // Monaco 编辑器本地化（中文）
+        'vs/nls': { availableLanguages: { '*': 'zh-cn' } },
+        paths: {
+          // 国内 CDN（阿里云），加载快；如需切换可改这里
+          vs: 'https://g.alicdn.com/code/lib/monaco-editor/0.52.0/min/vs',
+        },
+      },
+    }),
   ],
 });

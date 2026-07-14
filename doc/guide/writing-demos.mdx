@@ -43,6 +43,42 @@ export default defineComponent({
 ```
 ````
 
+## 在线编辑（Playground）
+
+使用 `playground` 语法可在浏览器中**实时编辑**代码并查看效果。本项目的 playground 已通过自定义渲染（`playground/Playground.tsx`）支持 Vue3：编辑左侧代码，右侧预览实时更新。
+
+```tsx playground
+import { defineComponent, ref, h } from 'vue';
+
+export default defineComponent({
+  setup() {
+    const count = ref(0);
+    return () =>
+      h('div', { style: 'padding: 16px; font-family: system-ui, sans-serif' }, [
+        h('p', { style: 'font-size: 16px; margin: 0 0 12px' }, `当前计数：${count.value}`),
+        h(
+          'button',
+          {
+            style:
+              'padding: 6px 16px; background: #409eff; color: #fff; border: none; border-radius: 4px; cursor: pointer',
+            onClick: () => (count.value += 1),
+          },
+          '点击 +1',
+        ),
+      ]);
+  },
+});
+```
+
+:::warning playground 的限制
+playground 在浏览器端用 `@babel/standalone` 编译，**不包含** `@vue/babel-plugin-jsx`，因此：
+- 支持 `h()` 渲染函数、`template` 字符串写法；
+- **不支持** JSX/TSX 语法（`<div>`）；
+- 依赖需通过 `include`（如 `vue`）预打包，无法引用本地文件。
+
+需要 JSX 或本地文件预览时，请改用上方的 `preview="iframe-follow"`。
+:::
+
 ## .vue 与 .tsx 的差异
 
 | 写法 | 组件引用 | 说明 |

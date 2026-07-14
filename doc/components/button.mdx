@@ -23,6 +23,68 @@ description: 常用的操作按钮，支持多种类型与状态。
 
 ```
 
+## 在线编辑（可修改代码）
+
+下方为 `playground` 示例，**可直接在右侧编辑器修改代码，左侧实时预览效果**（使用 `h()` 渲染函数写法）。
+
+```tsx playground
+import { defineComponent, ref, h } from 'vue';
+
+export default defineComponent({
+  setup() {
+    const count = ref(0);
+    return () =>
+      h('div', { style: 'padding: 16px; display: flex; gap: 12px; align-items: center' }, [
+        h(
+          'button',
+          {
+            style:
+              'padding: 8px 18px; background: #409eff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px',
+            onClick: () => (count.value += 1),
+          },
+          `点击 ${count.value}`,
+        ),
+        h('span', { style: 'color: #606266' }, '可在右侧编辑器修改代码'),
+      ]);
+  },
+});
+```
+
+:::tip preview 与 playground 的区别
+- `preview="iframe-follow"`：完整渲染（支持 TSX/JSX、Less、Element Plus），代码为**只读展示**。
+- `playground`：代码**可在线编辑**实时预览；受浏览器端 `@babel/standalone` 限制，需用 `h()` 或 `template`，不支持 JSX。
+:::
+
+## 在线编辑 - template 写法
+
+使用 `template` 字符串写法，语法与 `.vue` 模板一致（`{{ }}`、`@click`），可直接在右侧编辑器修改：
+
+```tsx playground
+import { defineComponent, ref } from 'vue';
+
+export default defineComponent({
+  setup() {
+    const count = ref(0);
+    return { count };
+  },
+  template: `
+    <div style="padding: 16px">
+      <p style="margin: 0 0 12px; color: #303133">当前计数：{{ count }}</p>
+      <button
+        style="padding: 6px 16px; background: #409eff; color: #fff; border: none; border-radius: 4px; cursor: pointer"
+        @click="count++"
+      >
+        点击 +1
+      </button>
+    </div>
+  `,
+});
+```
+
+:::info template 在线编译
+playground 通过 `include` 引入了「带编译器」的 Vue 全量构建（`vue.esm-browser`），因此 `template` 字符串会在浏览器端**实时编译**。修改上面代码中的模板（例如把 `@click="count++"` 改成 `@click="count += 10"`）即可立即看到效果。
+:::
+
 ## 属性
 
 | 参数 | 说明 | 类型 | 默认值 |
