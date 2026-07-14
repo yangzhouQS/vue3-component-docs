@@ -7,18 +7,30 @@ import { pluginVue } from '@rsbuild/plugin-vue';
 import { pluginVueJsx } from '@rsbuild/plugin-vue-jsx';
 import { pluginBabel } from '@rsbuild/plugin-babel';
 import { pluginLess } from '@rsbuild/plugin-less';
+import { cdnStyles, cdnScripts, cdnExternals } from './playground/cdn';
 
 const mountVueDemo = ({ demoPath }: { demoPath: string }): string =>
   [
     "import { createApp } from 'vue';",
     "import ElementPlus from 'element-plus';",
-    "import 'element-plus/dist/index.css';",
     `import Demo from ${JSON.stringify(demoPath)};`,
     '',
     'const app = createApp(Demo);',
-    'app.use(ElementPlus);',
+    '// Element Plus 组件样式由 CDN <link>(yun-que.css) 提供；vue / element-plus 等也由 CDN 全局注入',
+    'const g = typeof window !== "undefined" ? window : globalThis;',
+    'const locale = g.ElementPlusLocaleZhCn;',
+    'app.use(ElementPlus, locale ? { locale } : undefined);',
+    '// 图标全局注册（CDN 提供 ElementPlusIconsVue）',
+    'const icons = g.ElementPlusIconsVue;',
+    'if (icons) Object.keys(icons).forEach(k => app.component(k, icons[k]));',
     'app.mount("#root");',
   ].join('\n');
+
+const previewExternals = cdnExternals;
+const previewHtmlTags = [
+  ...cdnStyles.map(href => ({ tag: 'link', head: true, attrs: { rel: 'stylesheet', href } })),
+  ...cdnScripts.map(src => ({ tag: 'script', head: true, attrs: { src } })),
+];
 
 // 让 vue/compiler-sfc 在 web 与 SSR 中都使用「浏览器构建」，
 // 避免 @vue/compiler-sfc 的 Node 构建（consolidate.js 依赖 velocityjs 等）被静态打包。
@@ -87,6 +99,14 @@ export default defineConfig({
         customEntry: mountVueDemo,
         devPort: 7888,
         builderConfig: {
+          output: {
+            // 将 vue/element-plus 等排除出 bundle，改由 CDN 全局提供
+            externals: previewExternals,
+          },
+          html: {
+            // 注入 CDN 样式与脚本（vue 必须在 element-plus 之前加载）
+            tags: previewHtmlTags,
+          },
           tools: {
             rspack: {
               resolve: {
