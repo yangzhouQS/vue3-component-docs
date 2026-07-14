@@ -50,10 +50,10 @@ export default defineComponent({
 });
 ```
 
-:::tip preview 与 playground 的区别
+### preview 与 playground 的区别
 - `preview="iframe-follow"`：完整渲染（支持 TSX/JSX、Less、Element Plus），代码为**只读展示**。
 - `playground`：代码**可在线编辑**实时预览；支持原始 SFC（`<template>` + `<script setup>` + `<style>`）写法。
-:::
+
 
 ## 在线编辑 - 原始 SFC 写法
 
@@ -103,9 +103,26 @@ import { Check, Delete, Edit, Search, Star } from '@element-plus/icons-vue'
 
 ```
 
+## 外部导入在线编辑 - 原始 SFC 写法
+```vue file="./_demo-button.vue" playground
+
+```
+
+
 :::info SFC 在线编译
 playground 在浏览器端用 `vue/compiler-sfc` 实时编译 SFC（`<template>` 编译为 render、`<style scoped>` 处理作用域），Element Plus 与 `@element-plus/icons-vue` 已在本地预打包并全局注册。修改上方代码（如增删按钮、改 `type`）即可立即看到效果。
 :::
+
+## 外部文件在线编辑
+
+通过 `file` 引入外部 `.vue` 文件，同样支持在线编辑。注意：
+
+- 代码块语言须用 `tsx`（playground 仅识别 `jsx`/`tsx`），`file` 指向 `.vue` 文件即可；
+- 样式需用普通 `<style>`（**不能用 `lang="less"`/`scss`**，浏览器端 playground 无 CSS 预处理器）。
+
+```tsx file="./_demo-button-play.vue" playground
+
+```
 
 ## 属性
 

@@ -117,23 +117,31 @@ async function compileSFC(code: string): Promise<{ js: string; css: string }> {
   const scopeId = 'data-v-' + Math.random().toString(36).slice(2, 10);
 
   let js: string;
-  if (descriptor.script || descriptor.scriptSetup) {
-    // inlineTemplate：把 <template> 编译为 render 并内联进 <script setup> 产物，得到自完整组件
-    const script = sfc.compileScript(descriptor, {
-      id: scopeId,
-      inlineTemplate: true,
-      sourceMap: false,
-    });
-    js = script.content;
-  } else {
-    // 仅有 <template> 的 SFC：单独编译模板，组装为 { render } 组件
+  const tplOnly = () => {
     if (!descriptor.template) throw new Error('SFC 必须包含 <template> 或 <script>');
     const tpl = sfc.compileTemplate({
       source: descriptor.template.content,
       filename: 'App.vue',
       id: scopeId,
     });
-    js = `${tpl.code}\nexport default { render };`;
+    return `${tpl.code}\nexport default { render };`;
+  };
+  if (descriptor.script || descriptor.scriptSetup) {
+    // inlineTemplate：把 <template> 编译为 render 并内联进 <script setup> 产物，得到自完整组件
+    try {
+      const script = sfc.compileScript(descriptor, {
+        id: scopeId,
+        inlineTemplate: true,
+        sourceMap: false,
+      });
+      js = script.content;
+    } catch {
+      // script 编译失败（如空 script）时回退为「仅模板」组件
+      js = tplOnly();
+    }
+  } else {
+    // 仅有 <template> 的 SFC
+    js = tplOnly();
   }
 
   let css = '';
