@@ -24,3 +24,27 @@
 .rspress-doc .rp-preview--iframe-follow__device iframe {
   min-height: 320px;
 }
+
+/*
+ * Playground 布局：代码区在上、预览区在下（垂直布局）
+ * --------------------------------------------------
+ * 自定义 Playground 已将 DOM 顺序调整为 Editor(代码) 在前、Runner(预览) 在后，
+ * 配合 rp-playground-vertical 的 flex-direction: column 实现「上代码、下预览」。
+ * 这里修正分隔线位置与各区高度。
+ */
+.rp-playground.rp-playground-vertical {
+  flex-direction: column;
+}
+
+/* 代码编辑器：位于上方 */
+.rp-playground.rp-playground-vertical > .rp-playground-editor {
+  height: 320px;
+  border-top: none;
+  border-bottom: 1px solid var(--rp-c-divider-light, var(--rp-border));
+}
+
+/* 组件渲染预览：位于下方 */
+.rp-playground.rp-playground-vertical > .rp-playground-runner {
+  min-height: 200px;
+  overflow: auto;
+}

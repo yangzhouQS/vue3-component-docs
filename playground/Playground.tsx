@@ -238,8 +238,8 @@ export default function Playground(props: any) {
     language === 'tsx' || language === 'ts' ? 'typescript' : 'javascript';
 
   return (
-    <div className="rp-playground rp-playground-horizontal rp-not-doc">
-      <VueRunner code={code} />
+    <div className="rp-playground rp-playground-vertical rp-not-doc">
+      {/* 代码区域在上 */}
       <Editor
         value={code}
         onChange={onChange}
@@ -252,6 +252,8 @@ export default function Playground(props: any) {
           });
         }}
       />
+      {/* 组件渲染预览在下 */}
+      <VueRunner code={code} />
     </div>
   );
 }
