@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { createRequire } from 'node:module';
 import { defineConfig } from '@rspress/core';
 import { pluginPreview } from '@rspress/plugin-preview';
 import { pluginPlayground } from '@rspress/plugin-playground';
@@ -8,6 +7,8 @@ import { pluginVueJsx } from '@rsbuild/plugin-vue-jsx';
 import { pluginBabel } from '@rsbuild/plugin-babel';
 import { pluginLess } from '@rsbuild/plugin-less';
 import { cdnStyles, cdnScripts, cdnExternals } from './playground/cdn';
+import { pluginSfcBrowser } from './playground/plugins/plugin-sfc-browser';
+import { pluginPlaygroundFull } from './playground/plugins/plugin-playground-full';
 
 // 站点 base 前缀：rspress 的 base 与「新标签页打开」构造 URL 共用同一个值
 // 优先用环境变量 BASE_PATH，否则用下方默认值（部署到子路径时改这里）
@@ -38,56 +39,6 @@ const previewHtmlTags = [
   ...cdnStyles.map(href => ({ tag: 'link', head: true, attrs: { rel: 'stylesheet', href } })),
   ...cdnScripts.map(src => ({ tag: 'script', head: true, attrs: { src } })),
 ];
-
-// 让 vue/compiler-sfc 在 web 与 SSR 中都使用「浏览器构建」，
-// 避免 @vue/compiler-sfc 的 Node 构建（consolidate.js 依赖 velocityjs 等）被静态打包。
-const sfcRequire = createRequire(require.resolve('vue/package.json'));
-const sfcBrowserBuild = sfcRequire.resolve(
-  '@vue/compiler-sfc/dist/compiler-sfc.esm-browser.js',
-);
-const pluginSfcBrowser = () => ({
-  name: 'vue-compiler-sfc-browser',
-  builderConfig: {
-    tools: {
-      rspack(config: any) {
-        config.resolve = config.resolve || {};
-        const alias = config.resolve.alias;
-        const add = (key: string, val: string) => {
-          if (Array.isArray(alias)) {
-            if (!alias.find((a: any) => a && a.name === key)) alias.push({ name: key, alias: val });
-          } else {
-            config.resolve.alias = config.resolve.alias || {};
-            config.resolve.alias[key] = val;
-          }
-        };
-        add('vue/compiler-sfc', sfcBrowserBuild);
-        add('@vue/compiler-sfc', sfcBrowserBuild);
-        // 屏蔽 @vue/compiler-sfc 浏览器构建中 scss/less/stylus 懒加载 require 产生的
-        // "Critical dependency" 警告（运行时不会触发，仅用普通 CSS）。
-        config.ignoreWarnings = [
-          ...(Array.isArray(config.ignoreWarnings)
-            ? config.ignoreWarnings
-            : config.ignoreWarnings
-              ? [config.ignoreWarnings]
-              : []),
-          { module: /@vue[\\/]compiler-sfc/ },
-        ];
-      },
-    },
-  },
-});
-
-// 全页可编辑 Playground（新标签页打开）：注入站点 base 前缀供 openInNewTab 使用
-const pluginPlaygroundFull = () => ({
-  name: 'playground-full',
-  builderConfig: {
-    source: {
-      define: {
-        __PG_BASE__: JSON.stringify(SITE_BASE),
-      },
-    },
-  },
-});
 
 export default defineConfig({
   root: path.join(import.meta.dirname, 'doc'),
@@ -161,6 +112,6 @@ export default defineConfig({
       },
     }),
     pluginSfcBrowser(),
-    pluginPlaygroundFull(),
+    pluginPlaygroundFull({ base: SITE_BASE }),
   ],
 });
