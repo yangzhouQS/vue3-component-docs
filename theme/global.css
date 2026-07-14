@@ -141,3 +141,36 @@ html[class~='dark'] .rp-pg-ops__btn,
   padding: 24px;
   min-height: 60vh;
 }
+
+/*
+ * 全页可编辑 Playground（新标签页 /playground-full）
+ * 左右分栏由 Element Plus 的 el-splitter 负责（可拖动）；此处仅铺满视口。
+ */
+.rp-pg-fullpage {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: var(--rp-c-bg, #fff);
+}
+
+.rp-pg-fullpage__bar {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--rp-c-text-2, #666);
+  border-bottom: 1px solid var(--rp-c-divider-light, #e5e5e5);
+}
+
+.rp-pg-fullpage__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 8px;
+}
+
+/* 宿主 div：让 Monaco 撑满 panel */
+.pgfp-left .rp-playground-editor,
+.pgfp-left .rp-playground-editor > div {
+  height: 100%;
+}

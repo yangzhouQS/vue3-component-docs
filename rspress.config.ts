@@ -70,9 +70,26 @@ const pluginSfcBrowser = () => ({
   },
 });
 
+// 全页可编辑 Playground（新标签页打开）：注入站点 base 前缀供 openInNewTab 使用
+const siteBase = (() => {
+  const b = process.env.BASE_PATH || '/';
+  return b.endsWith('/') ? b : b + '/';
+})();
+const pluginPlaygroundFull = () => ({
+  name: 'playground-full',
+  builderConfig: {
+    source: {
+      define: {
+        __PG_BASE__: JSON.stringify(siteBase),
+      },
+    },
+  },
+});
+
 export default defineConfig({
   root: path.join(import.meta.dirname, 'doc'),
   title: 'Vue3 组件库文档',
+  // base: "/vue-node-docs/",
   description: '基于 Rspress 的 Vue3 + TSX + Less + Element Plus 组件库文档',
   // lang: 'zh-CN',
   base: process.env.BASE_PATH || '/',
@@ -142,5 +159,6 @@ export default defineConfig({
       },
     }),
     pluginSfcBrowser(),
+    pluginPlaygroundFull(),
   ],
 });
